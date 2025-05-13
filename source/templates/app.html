@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>autoIoc</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+<body>
+  <div class="container">
+    <h1>🔧 autoIoc</h1>
+    <div class="tab-buttons">
+      <button class="tab-button active" onclick="showTab('converter')">🔁 URI/IP 마스킹 변환기</button>
+      <button class="tab-button" onclick="showTab('iplookup')">🌍 IP Country 탐색기</button>
+    </div>
+
+    <div id="converter" class="tab active">
+      <textarea id="inputArea" placeholder="여기에 URI/IP를 입력하세요..."></textarea>
+      <label><input type="checkbox" id="reverseCheck" /> 역방향 변환</label>
+      <textarea id="outputArea" placeholder="결과가 여기에 표시됩니다..." readonly></textarea>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/converter.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/iplookup.js') }}"></script>
+    <div id="iplookup" class="tab">
+      <textarea id="ipInput" placeholder="IP 주소들을 입력하세요..."></textarea>
+      <button onclick="nordIplookup()">😁 노드 vpn으로 조회하기</button>
+      <button onclick="alert('개발중입니다 😊')">🐡 후이즈로 조회하기 - 국내 추천</button>
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th>🌐 IP</th>
+            <th>🙃 국가명(한글)</th>
+            <th>🫠 국가명(영문)</th>
+            <th>🐚 국가 코드</th>
+            <th>🦠 바이러스토탈 검색으로 이동</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tabId) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>
