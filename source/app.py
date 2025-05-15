@@ -89,6 +89,55 @@ def get_country_name_by_nord(ip_addr):
 
     return data
 
+@app.route('/whois/ip/<ip_addr>')
+def get_country_name_by_whois(ip_addr):
+    # Chrome User-Agent 값 설정 (브라우저처럼 보이도록)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+
+    verified = verify_ip_addr(ip_addr)
+
+    if verified == "value error":
+        return "정상 IP가 아닙니다."
+    elif verified == "blackList":
+        return "블랙리스트 IP 탐지!"
+    
+    # key (git ignored)
+    # kisa whois api 이용 키, 2025.05.* 갱신
+    with open('credentials.txt', 'r') as f:
+        try:
+            key = f.readline().strip()
+        except:
+            print("[!] 크리덴셜 파일 어디다 팔아먹음")
+
+    params = {
+        "serviceKey": key,
+        "answer": "JSON",
+        "query": ip_addr
+    }
+
+    # 서버에 요청을 보낼 때 headers에 User-Agent 추가
+    res = req.get(f"http://apis.data.go.kr/B551505/whois/ip_address", headers=headers, params=params)
+
+
+    data = res.json()
+
+    res_status = data['response']['result']['result_msg']
+
+    if res_status != "정상 응답 입니다.":
+        return "whois에서 조회에 실패하였습니다."
+    
+    data = data['response']['whois']
+
+    country_en_name = {"country_en_name" : get_country_name(data["countryCode"])}
+
+    # 혹시 틀릴수도 있으니깐 영문 명 추가
+    data.update(country_en_name)
+
+    return data
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=80)

@@ -1,17 +1,26 @@
-// IP 국가 조회 함수
+function checkIpList(ipList) {
+  const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})){3}$/;
+
+  for (let ip of ipList) {
+    if (!ipv4Regex.test(ip)) {
+      alert(`❗유효하지 않은 IP 주소: ${ip}`);
+      return false;
+    }
+  }
+
+  return true
+}
+
+
+// nord vpn
 function nordIplookup() {
   alert("과부하 방지를 위해 2초에 한번 검색합니다.")
 
   const ipInput = document.getElementById('ipInput').value.trim();
   const ipList = ipInput.split('\n').map(ip => ip.trim()).filter(ip => ip);
 
-  const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|1?[0-9]{1,2})){3}$/;
-
-  for (let ip of ipList) {
-    if (!ipv4Regex.test(ip)) {
-      alert(`❗유효하지 않은 IP 주소: ${ip}`);
-      return;
-    }
+  if (checkIpList(ipList) == false) {
+    return;
   }
 
   const resultTableBody = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
@@ -54,6 +63,59 @@ function nordIplookup() {
     }, index * 2000);  // 3초마다 하나씩 조회
   });
 }
+
+// whois
+function whoisIplookup() {
+  alert("과부하 방지를 위해 2초에 한번 검색합니다.")
+
+  const ipInput = document.getElementById('ipInput').value.trim();
+  const ipList = ipInput.split('\n').map(ip => ip.trim()).filter(ip => ip);
+
+  if (checkIpList(ipList) == false) {
+    return;
+  }
+
+  const resultTableBody = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
+  resultTableBody.innerHTML = '';  // 기존 결과 지우기
+
+  ipList.forEach((ip, index) => {
+    setTimeout(() => {
+      fetch(`/whois/ip/${ip}`)
+        .then(response => response.json())
+        .then(data => {
+          const country = data.countryCode ? getCountryName(data.countryCode) : '알 수 없음';
+          const country_en = data.country_en_name;
+          const country_code = data.countryCode;
+          const row = resultTableBody.insertRow(); 
+
+          row.insertCell(0).innerText = ip;
+          row.insertCell(1).innerText = country;
+          row.insertCell(2).innerText = country_en;
+          row.insertCell(3).innerText = country_code;
+
+          const linkCell = row.insertCell(4);
+          const a = document.createElement("a");
+          a.href = `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(ip)}`;
+          a.innerText = "이동 (바이러스토탈 조회)";
+          a.target = "_blank"; 
+          a.rel = "noopener noreferrer"; 
+          linkCell.appendChild(a);
+        })
+
+        .catch(error => {
+          const row = resultTableBody.insertRow();
+          row.insertCell(0).innerText = ip;
+          row.insertCell(1).innerText = '조회 실패';
+          row.insertCell(2).innerText = '조회 실패';
+          row.insertCell(3).innerText = '조회 실패';
+          row.insertCell(4).innerText = '이동 불가';
+          alert(error);
+          console.log(error);
+        });
+    }, index * 2000);  // 3초마다 하나씩 조회
+  });
+}
+
 
 // 국가 코드에서 국가명으로 변환
 function getCountryName(countryCode) {
