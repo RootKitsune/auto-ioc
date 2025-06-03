@@ -23,7 +23,6 @@ function convertText() {
         .replace(/https/gi, 'hxxps')
         .replace(/http/gi, 'hxxp')
         .replace(/(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/g, '$1[.]$2[.]$3[.]$4') // IP 주소 변환
-        .replace(/\./g, '[.]'); // 나머지 점 변환
     }
   }).join('\n');
 

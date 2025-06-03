@@ -102,4 +102,13 @@ th {
   .tab.active {
     display: block;
   }
-  
+
+.tab-button {
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.tab-button.active {
+  background-color: #ffb3d9;
+  font-weight: bold;
+}

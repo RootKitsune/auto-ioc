@@ -66,7 +66,7 @@ function nordIplookup() {
 
 // whois
 function whoisIplookup() {
-  alert("과부하 방지를 위해 2초에 한번 검색합니다.")
+  alert("과부하 방지를 위해 0.5초에 한번 검색합니다.")
 
   const ipInput = document.getElementById('ipInput').value.trim();
   const ipList = ipInput.split('\n').map(ip => ip.trim()).filter(ip => ip);
@@ -112,9 +112,11 @@ function whoisIplookup() {
           alert(error);
           console.log(error);
         });
-    }, index * 2000);  // 3초마다 하나씩 조회
+    }, index * 500);  // 0.5초마다 하나씩 조회
   });
 }
+
+
 
 
 // 국가 코드에서 국가명으로 변환
