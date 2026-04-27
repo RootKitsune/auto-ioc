@@ -11,18 +11,43 @@ function checkIpList(ipList) {
   return true
 }
 
+// ============== GLOBALS & HELPERS ==============
+function populateActionLinks(ip, linkCell) {
+    const a = document.createElement("a");
+    a.href = `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(ip)}`;
+    a.innerText = "[VT조회]";
+    a.target = "_blank"; 
+    a.rel = "noopener noreferrer"; 
+    linkCell.appendChild(a);
+    
+    // 개별 추출 버튼 추가
+    const dlBtn = document.createElement("a");
+    dlBtn.href = "#";
+    dlBtn.innerText = " [📥개별추출]";
+    dlBtn.style.color = "var(--primary-color)";
+    dlBtn.style.cursor = "pointer";
+    dlBtn.style.marginLeft = "8px";
+    dlBtn.onclick = (ev) => {
+        ev.preventDefault();
+        exportSingleRawLog(ip, dlBtn);
+    };
+    linkCell.appendChild(dlBtn);
+}
 
 // nord vpn
 function nordIplookup() {
-  alert("과부하 방지를 위해 2초에 한번 검색합니다.")
-
   const ipInput = document.getElementById('ipInput').value.trim();
-  const ipList = ipInput.split('\n').map(ip => ip.trim()).filter(ip => ip);
+  const ipListRaw = ipInput.split('\n').map(ip => ip.trim()).filter(ip => ip);
+  const ipList = [...new Set(ipListRaw)]; // 중복 제거
 
-  if (checkIpList(ipList) == false) {
+  if (ipList.length === 0) return;
+  if (ipList.length > 30) {
+    alert("❗Nord VPN 조회는 한 번에 최대 30개까지만 허용됩니다.");
     return;
   }
+  if (checkIpList(ipList) == false) return;
 
+  alert("과부하 방지를 위해 1초에 한번 검색합니다.");
   const resultTableBody = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
   resultTableBody.innerHTML = '';  // 기존 결과 지우기
 
@@ -34,47 +59,48 @@ function nordIplookup() {
           const country = data.country_code ? getCountryName(data.country_code) : '알 수 없음';
           const country_en = data.country_en_name;
           const country_code = data.country_code;
+          const hitCount = window.ipCounts && window.ipCounts[ip] ? window.ipCounts[ip] : '-';
           const row = resultTableBody.insertRow(); 
 
           row.insertCell(0).innerText = ip;
-          row.insertCell(1).innerText = country;
-          row.insertCell(2).innerText = country_en;
-          row.insertCell(3).innerText = country_code;
+          row.insertCell(1).innerText = hitCount;
+          row.insertCell(2).innerText = country;
+          row.insertCell(3).innerText = country_en;
+          row.insertCell(4).innerText = country_code;
 
-          const linkCell = row.insertCell(4);
-          const a = document.createElement("a");
-          a.href = `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(ip)}`;
-          a.innerText = "이동 (바이러스토탈 조회)";
-          a.target = "_blank"; 
-          a.rel = "noopener noreferrer"; 
-          linkCell.appendChild(a);
+          populateActionLinks(ip, row.insertCell(5));
         })
-
         .catch(error => {
+          const hitCount = window.ipCounts && window.ipCounts[ip] ? window.ipCounts[ip] : '-';
           const row = resultTableBody.insertRow();
           row.insertCell(0).innerText = ip;
-          row.insertCell(1).innerText = '조회 실패';
+          row.insertCell(1).innerText = hitCount;
           row.insertCell(2).innerText = '조회 실패';
           row.insertCell(3).innerText = '조회 실패';
-          row.insertCell(4).innerText = '이동 불가';
-          alert(error);
+          row.insertCell(4).innerText = '조회 실패';
+          populateActionLinks(ip, row.insertCell(5));
           console.log(error);
+        }).finally(() => {
+          filterTable(); // 결과가 추가된 후 필터링 즉시 적용
         });
-    }, index * 2000);  // 3초마다 하나씩 조회
+    }, index * 1000);  // 1초마다 하나씩 조회
   });
 }
 
 // whois
 function whoisIplookup() {
-  alert("과부하 방지를 위해 0.5초에 한번 검색합니다.")
-
   const ipInput = document.getElementById('ipInput').value.trim();
-  const ipList = ipInput.split('\n').map(ip => ip.trim()).filter(ip => ip);
+  const ipListRaw = ipInput.split('\n').map(ip => ip.trim()).filter(ip => ip);
+  const ipList = [...new Set(ipListRaw)]; // 중복 제거
 
-  if (checkIpList(ipList) == false) {
+  if (ipList.length === 0) return;
+  if (ipList.length > 1000) {
+    alert("❗KISA Whois 조회는 한 번에 최대 1000개까지만 허용됩니다.");
     return;
   }
+  if (checkIpList(ipList) == false) return;
 
+  alert("과부하 방지를 위해 0.2초에 한번 검색합니다.");
   const resultTableBody = document.getElementById('resultTable').getElementsByTagName('tbody')[0];
   resultTableBody.innerHTML = '';  // 기존 결과 지우기
 
@@ -86,33 +112,31 @@ function whoisIplookup() {
           const country = data.countryCode ? getCountryName(data.countryCode) : '알 수 없음';
           const country_en = data.country_en_name;
           const country_code = data.countryCode;
+          const hitCount = window.ipCounts && window.ipCounts[ip] ? window.ipCounts[ip] : '-';
           const row = resultTableBody.insertRow(); 
 
           row.insertCell(0).innerText = ip;
-          row.insertCell(1).innerText = country;
-          row.insertCell(2).innerText = country_en;
-          row.insertCell(3).innerText = country_code;
+          row.insertCell(1).innerText = hitCount;
+          row.insertCell(2).innerText = country;
+          row.insertCell(3).innerText = country_en;
+          row.insertCell(4).innerText = country_code;
 
-          const linkCell = row.insertCell(4);
-          const a = document.createElement("a");
-          a.href = `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(ip)}`;
-          a.innerText = "이동 (바이러스토탈 조회)";
-          a.target = "_blank"; 
-          a.rel = "noopener noreferrer"; 
-          linkCell.appendChild(a);
+          populateActionLinks(ip, row.insertCell(5));
         })
-
         .catch(error => {
+          const hitCount = window.ipCounts && window.ipCounts[ip] ? window.ipCounts[ip] : '-';
           const row = resultTableBody.insertRow();
           row.insertCell(0).innerText = ip;
-          row.insertCell(1).innerText = '조회 실패';
+          row.insertCell(1).innerText = hitCount;
           row.insertCell(2).innerText = '조회 실패';
           row.insertCell(3).innerText = '조회 실패';
-          row.insertCell(4).innerText = '이동 불가';
-          alert(error);
+          row.insertCell(4).innerText = '조회 실패';
+          populateActionLinks(ip, row.insertCell(5));
           console.log(error);
+        }).finally(() => {
+          filterTable(); // 결과가 추가된 후 필터링 즉시 적용
         });
-    }, index * 500);  // 0.5초마다 하나씩 조회
+    }, index * 200);  // 0.2초마다 하나씩 조회
   });
 }
 
@@ -324,3 +348,228 @@ function getCountryName(countryCode) {
   return countries[countryCode] || countryCode;
 }
 
+// ============== NEW FEATURES ==============
+window.currentJobId = null;
+window.currentFileName = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const fileInput = document.getElementById('ipFileInput');
+  if(fileInput) {
+      fileInput.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if(!file) return;
+          const status = document.getElementById('uploadStatus');
+          status.innerText = `[PROCESSING] ${file.name}...`;
+          status.style.color = "var(--accent-color)";
+          
+          const formData = new FormData();
+          formData.append('file', file);
+          const preserveLogs = document.getElementById('preserveLogsToggle').checked;
+          formData.append('preserveLogs', preserveLogs);
+          
+          try {
+              const res = await fetch('/upload/extract', {
+                  method: 'POST',
+                  body: formData
+              });
+              if(!res.ok) throw new Error('네트워크 응답 오류');
+              const data = await res.json();
+              if(data.error) throw new Error(data.error);
+              
+              window.currentJobId = data.job_id || null;
+              window.currentFileName = data.filename || null;
+              window.ipCounts = data.counts || {};
+              
+              const existingValue = document.getElementById('ipInput').value.trim();
+              const newLines = existingValue ? existingValue + '\n' + data.ips.join('\n') : data.ips.join('\n');
+              document.getElementById('ipInput').value = newLines;
+              
+              status.innerText = `[SUCCESS] 원본 파일에서 ${data.ips.length}개의 고유 IP를 추출했습니다.`;
+              status.style.color = "var(--primary-color)";
+              fileInput.value = ""; // 초기화
+          } catch(err) {
+              status.innerText = `[ERROR] IP 추출에 실패했습니다.`;
+              status.style.color = "var(--secondary-color)";
+              console.error(err);
+          }
+      });
+  }
+
+  // 필터 초기화
+  const fk = document.getElementById('filterKr');
+  const fnk = document.getElementById('filterNonKr');
+  if(fk) fk.addEventListener('change', filterTable);
+  if(fnk) fnk.addEventListener('change', filterTable);
+});
+
+function filterTable() {
+  const showKr = document.getElementById('filterKr').checked;
+  const showNonKr = document.getElementById('filterNonKr').checked;
+  const rows = document.querySelectorAll('#resultTable tbody tr');
+  
+  rows.forEach(row => {
+      const nationCode = row.cells[4].innerText.trim().toUpperCase(); 
+      let isKr = (nationCode === 'KR');
+      if (nationCode === '조회 실패' || nationCode === '알 수 없음' || nationCode === 'ERR' || nationCode === 'FAIL' || !nationCode) {
+         isKr = false;
+      }
+      
+      if (isKr && !showKr) {
+          row.style.display = 'none';
+      } else if (!isKr && !showNonKr) {
+          row.style.display = 'none';
+      } else {
+          row.style.display = '';
+      }
+  });
+}
+
+function exportResults(type) {
+  const rows = Array.from(document.querySelectorAll('#resultTable tbody tr')).filter(row => row.style.display !== 'none');
+  if (rows.length === 0) {
+      alert("출력할 데이터가 없습니다.");
+      return;
+  }
+  
+  let content = "";
+  if (type === 'csv') {
+      content = "IP_ADDR,HIT_COUNT,NATION_KR,NATION_EN,CODE\n";
+      rows.forEach(row => {
+          const ip = row.cells[0].innerText;
+          const hitCount = row.cells[1].innerText;
+          const nationKr = row.cells[2].innerText;
+          const nationEn = row.cells[3].innerText;
+          const code = row.cells[4].innerText;
+          content += `${ip},${hitCount},${nationKr},${nationEn},${code}\n`;
+      });
+      downloadFile(content, 'ip_lookup_result.csv', 'text/csv');
+  } else if (type === 'log') {
+      rows.forEach(row => {
+          const ip = row.cells[0].innerText;
+          const hitCount = row.cells[1].innerText;
+          const nationKr = row.cells[2].innerText;
+          const code = row.cells[4].innerText;
+          const timestamp = new Date().toISOString();
+          content += `[${timestamp}] IP: ${ip} | HIT_COUNT: ${hitCount} | NATION: ${nationKr} (${code})\n`;
+      });
+      downloadFile(content, 'ip_lookup_result.log', 'text/plain');
+  }
+}
+
+function downloadFile(content, filename, contentType) {
+  const blob = new Blob([content], { type: contentType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportRawLogs() {
+  if (!window.currentJobId) {
+      alert("서버에 보존된 원본 로그 파일이 없습니다!\n(새로고침 했거나, 파일 업로드 시 '[기능] 원문 보존형 로직 활성화' 토글을 켜지 않았습니다.)");
+      return;
+  }
+  
+  const rows = Array.from(document.querySelectorAll('#resultTable tbody tr')).filter(row => row.style.display !== 'none');
+  if (rows.length === 0) {
+      alert("추출할 타겟 IP(결과 테이블에 보이는 목록)가 없습니다.");
+      return;
+  }
+  
+  const targetIps = rows.map(row => row.cells[0].innerText);
+  const btn = document.querySelector('.raw-btn');
+  const orgText = btn.innerText;
+  btn.innerText = "⏳ EXTRACTING...";
+  
+  fetch('/export/raw', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+          job_id: window.currentJobId,
+          target_ips: targetIps,
+          filename: window.currentFileName
+      })
+  })
+  .then(async res => {
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+          const errData = await res.json();
+          throw new Error(errData.error || "Server Error");
+      }
+      if (!res.ok) {
+          throw new Error("서버 오류가 발생했습니다.");
+      }
+      return res.blob();
+  })
+  .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      let safeFilename = window.currentFileName ? window.currentFileName.replace(/[^a-zA-Z0-9.\-_]/g, '_') : 'logs';
+      a.download = `raw_logs_by_ip_${safeFilename}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+  })
+  .catch(err => {
+      console.error(err);
+      alert(err.message || "원문 로그를 추출하는 도중 서버 오류가 발생했습니다.");
+  })
+  .finally(() => {
+      btn.innerText = orgText;
+  });
+}
+
+function exportSingleRawLog(targetIp, elm) {
+  if (!window.currentJobId) {
+      alert("서버에 보존된 원본 로그 파일이 없습니다!\n(새로고침 했거나, 파일 업로드 시 '[기능] 원문 보존형 로직 활성화' 토글을 켜지 않았습니다.)");
+      return;
+  }
+  
+  const orgText = elm.innerText;
+  elm.innerText = " [⏳처리중]";
+  
+  fetch('/export/raw', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+          job_id: window.currentJobId,
+          target_ips: [targetIp],
+          filename: window.currentFileName
+      })
+  })
+  .then(async res => {
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+          const errData = await res.json();
+          throw new Error(errData.error || "Server Error");
+      }
+      if (!res.ok) {
+          throw new Error("서버 오류가 발생했습니다.");
+      }
+      return res.blob();
+  })
+  .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      let safeFilename = window.currentFileName ? window.currentFileName.replace(/[^a-zA-Z0-9.\-_]/g, '_') : 'logs';
+      a.download = `raw_log_${targetIp.replace(/[^0-9.]/g, '_')}_${safeFilename}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+  })
+  .catch(err => {
+      console.error(err);
+      alert(err.message || "원문 로그 추출 도중 서버 오류가 발생했습니다.");
+  })
+  .finally(() => {
+      elm.innerText = orgText;
+  });
+}

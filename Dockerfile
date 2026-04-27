@@ -3,6 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 COPY requirements.txt ./
+COPY whois.txt ./
 COPY source/ /app/
 
 # 패키지 설치

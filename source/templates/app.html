@@ -2,65 +2,100 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>autoIoc</title>
+    <title>SYS.TERMINAL // autoIoc</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   </head>
 <body>
   <div class="container">
-    <h1>🔧 autoIoc</h1>
+    <h1>SYS.TERMINAL // autoIoc</h1>
     <div class="tab-buttons">
-      <button class="tab-button active" onclick="showTab('converter')">🔁 URI/IP 마스킹 변환기</button>
-      <button class="tab-button" onclick="showTab('iplookup')">🌍 IP Country 탐색기</button>
-      <button class="tab-button" onclick="showTab('domain_iplookup')">🌍 URI > IP 조회 탐색기</button>
+      <button class="tab-button active" onclick="showTab('converter')">[ IP/URI MASK ]</button>
+      <button class="tab-button" onclick="showTab('iplookup')">[ IP SCANNER ]</button>
+      <button class="tab-button" onclick="showTab('domain_iplookup')">[ DOMAIN SCANNER ]</button>
     </div>
 
+    <!-- TAB 1: CONVERTER -->
     <div id="converter" class="tab active">
-      <textarea id="inputArea" placeholder="여기에 URI/IP를 입력하세요..."></textarea>
-      <label><input type="checkbox" id="reverseCheck" /> 역방향 변환</label>
-      <textarea id="outputArea" placeholder="결과가 여기에 표시됩니다..." readonly></textarea>
+      <textarea id="inputArea" placeholder="Enter IP or URI to process..."></textarea>
+      <label class="cyber-checkbox">
+        <input type="checkbox" id="reverseCheck" /> 
+        <span class="checkmark"></span>
+        REVERSE_CONVERSION
+      </label>
+      <textarea id="outputArea" placeholder="Output datastream..." readonly></textarea>
     </div>
 
-    <script src="{{ url_for('static', filename='js/converter.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/iplookup.js') }}"></script>
+    <!-- TAB 2: IP LOOKUP -->
     <div id="iplookup" class="tab">
-      <textarea id="ipInput" placeholder="IP 주소들을 입력하세요..."></textarea>
-      <button onclick="nordIplookup()">😁 노드 vpn으로 조회하기</button>
-      <button onclick="whoisIplookup()">🐡 후이즈로 조회하기 - 국내 추천</button>
+      <div class="upload-section" style="flex-wrap: wrap;">
+        <label class="cyber-button file-upload-btn">
+          [ UPLOAD FILE (.TXT, .CSV, .ZIP) ]
+          <input type="file" id="ipFileInput" accept=".txt,.csv,.log,.zip" style="display:none;">
+        </label>
+        <span id="uploadStatus">No file selected</span>
+        
+        <label class="cyber-checkbox" style="margin-left:auto; margin-bottom:0; font-size: 0.9rem;">
+          <input type="checkbox" id="preserveLogsToggle">
+          <span class="checkmark"></span> [기능] 원문 보존형 로직 활성화
+        </label>
+      </div>
+      
+      <textarea id="ipInput" placeholder="Enter IP block or Upload File..."></textarea>
+      
+      <div class="sorting-controls">
+        <span class="filter-label" style="color: var(--primary-color);">[ FILTER ]</span>
+        <label class="cyber-checkbox"><input type="checkbox" id="filterKr" checked><span class="checkmark"></span> DOMESTIC (KR)</label>
+        <label class="cyber-checkbox"><input type="checkbox" id="filterNonKr" checked><span class="checkmark"></span> OVERSEAS (NON-KR)</label>
+      </div>
+
+      <div class="action-buttons" style="flex-wrap: wrap;">
+        <button onclick="nordIplookup()">EXECUTE // NORD (Max 30)</button>
+        <button onclick="whoisIplookup()">EXECUTE // WHOIS (Max 1000)</button>
+        <div style="flex-grow: 1;"></div>
+        <button class="export-btn raw-btn" onclick="exportRawLogs()" style="color: var(--accent-color); border-color: var(--accent-color);">⏬ RAW LOGS</button>
+        <button class="export-btn" onclick="exportResults('csv')">EXPORT .CSV</button>
+        <button class="export-btn" onclick="exportResults('log')">EXPORT .LOG</button>
+      </div>
       <table id="resultTable">
         <thead>
           <tr>
-            <th>🌐 IP</th>
-            <th>🙃 국가명(한글)</th>
-            <th>🫠 국가명(영문)</th>
-            <th>🐚 국가 코드</th>
-            <th>🦠 바이러스토탈 검색으로 이동</th>
+            <th>IP_ADDR</th>
+            <th>HIT_COUNT</th>
+            <th>NATION_KR</th>
+            <th>NATION_EN</th>
+            <th>CODE</th>
+            <th>ACTIONS</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
-      <div id="domain_iplookup" class="tab">
-      <textarea id="ipInput" placeholder="IP 주소들을 입력하세요..."></textarea>
-      <button onclick="norDomainlookup()">😁 노드 vpn으로 조회하기</button>
-      <button onclick="whoisDomainlookup()">🐡 후이즈로 조회하기 - 국내 추천</button>
-      <table id="resultTable">
+
+    <!-- TAB 3: DOMAIN LOOKUP -->
+    <div id="domain_iplookup" class="tab">
+      <textarea id="domainInput" placeholder="Enter URI block..."></textarea>
+      <div class="action-buttons">
+        <button onclick="norDomainlookup()">EXECUTE // NORD VPN</button>
+        <button onclick="whoisDomainlookup()">EXECUTE // WHOIS (KR)</button>
+      </div>
+      <table id="domainResultTable">
         <thead>
           <tr>
-            <th>🚙 URL</th>
-            <th>🌐 IP</th>
-            <th>🙃 국가명(한글)</th>
-            <th>🫠 국가명(영문)</th>
-            <th>🐚 국가 코드</th>
-            <th>🦠 바이러스토탈 검색으로 이동</th>
+            <th>URL_TARGET</th>
+            <th>IP_ADDR</th>
+            <th>NATION_KR</th>
+            <th>NATION_EN</th>
+            <th>CODE</th>
+            <th>V_TOTAL_LINK</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
   </div>
-</div>  
 
-
+  <script src="{{ url_for('static', filename='js/converter.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/iplookup.js') }}"></script>
   <script>
     function showTab(tabId) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
